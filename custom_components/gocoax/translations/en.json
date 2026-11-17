@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Connect to goCoax Adapter",
-        "description": "Enter the connection details for your goCoax MoCA adapter. [☕ Tip the Author](https://buymeacoffee.com/DYks67r)",
+        "description": "Enter the connection details for read-only monitoring. This device uses unencrypted HTTP; use a trusted management network and a unique adapter password.",
         "data": {
           "host": "Host",
           "username": "Username",
@@ -56,6 +56,9 @@
       "mac_address": {
         "name": "MAC Address"
       },
+      "ip_address": {
+        "name": "IP Address"
+      },
       "node_id": {
         "name": "Node ID"
       },
@@ -68,11 +71,41 @@
       "peer_count": {
         "name": "Network Peers"
       },
+      "frequency_band": {
+        "name": "Configured frequency bands"
+      },
+      "lof": {
+        "name": "Lowest Operating Frequency"
+      },
+      "channel_count": {
+        "name": "Channel Count"
+      },
       "phy_tx_rate": {
         "name": "PHY TX Rate"
       },
       "phy_rx_rate": {
         "name": "PHY RX Rate"
+      },
+      "soc_version": {
+        "name": "SoC SDK version"
+      },
+      "ethernet_speed": {
+        "name": "Ethernet link speed"
+      },
+      "ethernet_duplex": {
+        "name": "Ethernet duplex"
+      },
+      "beacon_channel": {
+        "name": "Beacon channel"
+      },
+      "primary_channel": {
+        "name": "Primary channel"
+      },
+      "secondary_channel": {
+        "name": "Secondary channel"
+      },
+      "first_channel": {
+        "name": "First bonded channel"
       }
     },
     "binary_sensor": {
@@ -81,6 +114,12 @@
       },
       "network_controller": {
         "name": "Network Controller"
+      },
+      "encryption_enabled": {
+        "name": "Encryption Enabled"
+      },
+      "ethernet_link": {
+        "name": "Ethernet link"
       }
     }
   }

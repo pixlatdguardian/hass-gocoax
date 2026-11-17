@@ -27,8 +27,8 @@ class NetworkPeer:
     node_id: int
     mac_address: str
     moca_version: str
-    tx_phy_rate: int = 0  # Mbps
-    rx_phy_rate: int = 0  # Mbps
+    tx_phy_rate: int | None = None  # Mbps; unavailable is not zero
+    rx_phy_rate: int | None = None
 
 
 @dataclass
@@ -37,8 +37,8 @@ class PhyRate:
 
     source_mac: str
     target_mac: str
-    tx_rate: int  # Mbps
-    rx_rate: int  # Mbps
+    tx_rate: int | None  # Mbps
+    rx_rate: int | None  # Mbps
 
 
 @dataclass
@@ -74,6 +74,14 @@ class AdapterStatus:
     signal_quality: SignalQuality = field(default_factory=SignalQuality)
     channel_count: int | None = None  # number of bonded channels
     nc_node_id: int | None = None  # network controller node ID
+    soc_version: str | None = None  # SDK version, not the firmware image version
+    ethernet_link: bool | None = None
+    ethernet_speed: int | None = None  # Mbps
+    ethernet_duplex: str | None = None
+    beacon_channel: int | None = None
+    primary_channel: int | None = None
+    secondary_channel: int | None = None
+    first_channel: int | None = None
 
     @property
     def peer_count(self) -> int:
@@ -97,6 +105,14 @@ class AdapterStatus:
             "lof": self.lof,
             "channel_count": self.channel_count,
             "encryption_enabled": self.encryption_enabled,
+            "soc_version": self.soc_version,
+            "ethernet_link": self.ethernet_link,
+            "ethernet_speed": self.ethernet_speed,
+            "ethernet_duplex": self.ethernet_duplex,
+            "beacon_channel": self.beacon_channel,
+            "primary_channel": self.primary_channel,
+            "secondary_channel": self.secondary_channel,
+            "first_channel": self.first_channel,
             "signal_quality": {
                 "snr": self.signal_quality.snr,
                 "tx_power": self.signal_quality.tx_power,

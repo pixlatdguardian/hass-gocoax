@@ -36,6 +36,12 @@ class GoCoaxBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[GoCoaxBinarySensorEntityDescription, ...] = (
     GoCoaxBinarySensorEntityDescription(
+        key="ethernet_link",
+        translation_key="ethernet_link",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: data.ethernet_link,
+    ),
+    GoCoaxBinarySensorEntityDescription(
         key="link_status",
         translation_key="link_status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,

@@ -1,112 +1,82 @@
-# goCoax MoCA for Home Assistant
+# goCoax MoCA — read-only Home Assistant integration
 
-![goCoax Logo](https://raw.githubusercontent.com/rsnodgrass/hass-gocoax/main/img/logo.png)
+A monitoring fork of [homeassistant-projects/hass-gocoax](https://github.com/homeassistant-projects/hass-gocoax), originally by Ryan Snodgrass. Apache 2.0 license and original attribution are retained in [LICENSE.md](LICENSE.md).
 
-Sensors for monitoring [goCoax](https://gocoax.com/) MoCA adapters and the associated mesh networks.
+Version **1.2.0** targets the **MA2500D firmware 2.0.16.0** protocol. The client
+has been exercised against two physical adapters. Other models/firmware require
+validation; upstream's former compatibility list is not a claim about this fork.
 
-![release_badge](https://img.shields.io/github/release/rsnodgrass/hass-gocoax.svg)
-![release_date](https://img.shields.io/github/release-date/rsnodgrass/hass-gocoax.svg)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
-![beta_badge](https://img.shields.io/badge/maturity-Beta-yellow.png)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Buy Me A Coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://buymeacoffee.com/DYks67r)
+## What it reads
 
-## Models Supported
+- MoCA link/controller state, local node ID and discovered peers, including node 0.
+- Local MAC/IP, network MoCA version and Ethernet packet/error/drop counters.
+- Directional peer PHY rates decoded from the firmware's packed FMR data.
+- Ethernet link, speed and duplex; SoC SDK version.
+- Configured frequency bands, lowest operating frequency, beacon/primary/
+  secondary/first channels and bonded channel count.
+- Configured legacy/enhanced MoCA encryption flags, without requesting any keys.
 
-| Manufacturer | Model   | MoCA Speed | Ethernet Port | Supported | Known Working Firmware |
-|--------------|---------|:----------:|:-------------:|:---------:|:-------------:|
-| goCoax       | MA2500D | 2.5        | 2.5 GbE       | YES       | 2.0.11 |
-| goCoax       | MA2500C | 2.5        | 2.5 GbE       | YES       | 3.0.5 |
-| goCoax       | WF-803M | 2.5        | 1.0 GbE       | YES       | 1.0.12 |
-| Frontier     | FCA252  | 2.5        | 1.0 GbE       | YES       | |
-| Frontier     | WF-803T / FCA251 | 2.5 | 1.0 GbE    | YES       | |
+The SoC SDK version is kept separate from the firmware image version. Unknown
+image/model/SNR/power fields remain unknown. Optional unavailable PHY data does
+not become a misleading zero; unavailable peers keep their existing entities.
 
-**NOTE: To ensure sensor data is properly read from the adapters, it is recommended that you update to the LATEST FIRMWARE offered by [goCoax Support](https://www.gocoax.com/support), or one of the firmwares listed in the above table. However, upgrading firmware MAY reset settings on the adapter.**
+## Device access policy
 
-## Installation
+There are no configuration controls, setters, reboot, restore, upgrade, firmware
+uploads or shell operations. Adapter requests are limited to fixed status pages
+and reviewed getter endpoints with validated numeric payloads. Firmware getters
+use HTTP POST even when the endpoint name ends in `/GET`. All redirects are
+refused, and owned sessions ignore environment proxies.
 
-Make sure [Home Assistant Community Store (HACS)](https://github.com/custom-components/hacs) is installed. This integration is part of the default HACS store (though can also be added manually using repository: `rsnodgrass/hass-gocoax`)
+The MA2500D management interface uses HTTP Basic authentication over unencrypted
+HTTP. Use a unique adapter password and a trusted management network. This fork
+does not add HTTPS support to the hardware. Authentication/session cookies and
+CSRF tokens stay in memory; raw responses are not logged. Diagnostic exports
+redact credentials, MAC fields, host/IP and the host-bearing entry title.
 
-### Configuration
+Normal observational queries still create sessions, consume resources and may
+appear in device logs. A read-only policy means no configuration commands are
+sent; it is not a promise of zero transient device activity.
 
-The goCoax MoCA unit IP address must be accessible from the Home Assistant host. Either set a static IP on the goCoax admin panel or use static DHCP assignment.
+## Home Assistant configuration
 
-Add via the Home Assistant UI: **Settings > Devices & Services > Add Integration > goCoax**
+The integration retains the `gocoax` domain and existing entity unique-ID formats.
+Configure an adapter address and credentials through Settings → Devices & Services.
+Polling can be set from 10–300 seconds, default 30. Timeout/connection failures
+mark entities unavailable rather than silently presenting stale data as fresh.
 
-- **Host**: IP address of your goCoax adapter
-- **Username**: Admin username (default: `admin`)
-- **Password**: Admin password (default: `gocoax`)
+The fork is a replacement for the upstream component, not a second integration
+to install alongside it. Back up HA before a future deployment and replace the
+existing `custom_components/gocoax` component as one unit. HACS users should
+select this repository as their custom integration source rather than mixing
+files from two repositories. The validation/build tooling does not deploy to HA.
 
-## Sensors
+1Password is used only by the optional development probe. HA uses its normal
+config-entry credentials and does not require the 1Password CLI.
 
-### Binary Sensors
+## Development and validation
 
-| Sensor | Description |
-|--------|-------------|
-| Link Status | MoCA network connectivity (on = connected) |
-| Network Controller | Whether this adapter is the MoCA Network Controller |
-| Encryption Enabled | MoCA privacy/encryption status |
-
-### Sensors
-
-| Sensor | Description |
-|--------|-------------|
-| MoCA Version | Protocol version (2.0, 2.5) |
-| MAC Address | Adapter's unique MAC address |
-| IP Address | Adapter's IP address |
-| Node ID | MoCA network node identifier |
-| Network Peers | Count of other adapters on the MoCA network |
-| TX Packets | Ethernet transmit packet count (with ok/bad/dropped attributes) |
-| RX Packets | Ethernet receive packet count (with ok/bad/dropped attributes) |
-| PHY TX Rate | Physical layer transmit rate to each peer (Mbps) |
-| PHY RX Rate | Physical layer receive rate from each peer (Mbps) |
-| Frequency Band | Operating frequency band (D-Low, D-High, Extended-D) |
-| Lowest Operating Frequency | LOF in MHz |
-| Channel Count | Number of bonded MoCA channels |
-
-### Device Info
-
-The following information is shown in the device details:
-
-- Model name
-- Firmware version
-- Configuration URL (link to adapter web UI)
-
-## Options
-
-After initial setup, you can configure:
-
-- **Update Interval**: How often to poll the adapter (10-300 seconds, default: 30)
-
-## Future Enhancements
-
-The following features are planned for future releases:
-
-- **Device Tracker**: Track devices on the MoCA network by MAC address
-- **Configuration Options**: Band selection, encryption toggle (pending API write support)
-- **SNR/Power Level Sensors**: Signal-to-noise ratio and power levels (pending endpoint discovery)
-
-## See Also
-
-- [Official goCoax Support Forum](https://www.gocoax.com/forum)
-- [goCoax Product Page](https://www.gocoax.com/products)
-
-## Contributing
-
-Contributions are welcome! If you have a goCoax adapter and want to help improve the integration:
-
-1. Enable debug logging to capture raw API responses
-2. Share endpoint data (with MAC addresses redacted) to help improve parsing
-3. Report issues or submit pull requests on GitHub
-
-```yaml
-logger:
-  logs:
-    custom_components.gocoax: debug
+```sh
+python -m venv .venv
+# Activate the virtualenv using your platform's normal command.
+python -m pip install aiohttp pytest pytest-asyncio ruff
+python -m pytest tests_client -q
+python -m ruff check custom_components tests_client tools
 ```
 
-## Support
+`tests_client` covers anonymized captured layouts, sparse node masks, unsigned
+64-bit counters, HTTP cookie/CSRF behavior, bounded retries, redirects, response
+limits and denied write-shaped requests. `tests` exercises HA configuration,
+coordinator lifecycle, diagnostics and real entity behavior using the HA test
+harness. See [VALIDATION.md](VALIDATION.md) for measured results and limits.
 
-This integration is maintained in my free time. Sponsorship directly funds new device support and faster updates.
+For an explicitly authorized live test, supply the two target IPs and provide
+`GOCOAX_USERNAME` / `GOCOAX_PASSWORD` only through a secret manager or process
+environment. `tools/live_check.py --host <adapter-a> --host <adapter-b>` performs
+setup and two polls against each, checks reciprocal peer identities, and writes
+a local git-ignored result. Never commit credential references, local captures,
+session cookies, real device identifiers or unredacted diagnostic bundles.
 
-[![Buy Me a Coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://buymeacoffee.com/DYks67r)
+The live validator currently asserts the tested two-node MA2500D setup: one peer,
+five channels and 2.5 GbE on each adapter. The integration itself supports the
+firmware's sixteen-node mask and dynamically adds sensors for new peers.
